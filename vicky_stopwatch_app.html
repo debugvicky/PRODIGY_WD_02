@@ -1,768 +1,244 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stopwatch App</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Poppins:wght@300;400;500;600;700&display=swap');
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-            background-size: 400% 400%;
-            animation: gradientShift 15s ease infinite;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            overflow-x: hidden;
-        }
-
-        @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        .background-elements {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: -1;
-        }
-
-        .floating-circle {
-            position: absolute;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.1);
-            animation: float 6s ease-in-out infinite;
-        }
-
-        .floating-circle:nth-child(1) {
-            width: 80px;
-            height: 80px;
-            top: 20%;
-            left: 10%;
-            animation-delay: 0s;
-        }
-
-        .floating-circle:nth-child(2) {
-            width: 120px;
-            height: 120px;
-            top: 60%;
-            right: 15%;
-            animation-delay: 2s;
-        }
-
-        .floating-circle:nth-child(3) {
-            width: 60px;
-            height: 60px;
-            bottom: 20%;
-            left: 20%;
-            animation-delay: 4s;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-20px) rotate(180deg); }
-        }
-
-        .stopwatch-container {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(20px);
-            border-radius: 30px;
-            padding: 50px;
-            box-shadow: 
-                0 25px 50px rgba(0, 0, 0, 0.2),
-                inset 0 1px 0 rgba(255, 255, 255, 0.2);
-            max-width: 500px;
-            width: 100%;
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stopwatch-container::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: conic-gradient(
-                from 0deg,
-                transparent,
-                rgba(255, 255, 255, 0.1),
-                transparent
-            );
-            animation: rotate 10s linear infinite;
-            opacity: 0.5;
-        }
-
-        @keyframes rotate {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .stopwatch-container > * {
-            position: relative;
-            z-index: 1;
-        }
-
-        .stopwatch-title {
-            font-family: 'Orbitron', monospace;
-            font-size: 3em;
-            font-weight: 900;
-            color: #fff;
-            margin-bottom: 30px;
-            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
-            background: linear-gradient(45deg, #fff, #f0f0f0, #fff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: titleGlow 3s ease-in-out infinite alternate;
-        }
-
-        @keyframes titleGlow {
-            0% { text-shadow: 0 0 20px rgba(255, 255, 255, 0.5); }
-            100% { text-shadow: 0 0 30px rgba(255, 255, 255, 0.8), 0 0 40px rgba(255, 255, 255, 0.3); }
-        }
-
-        .time-display {
-            font-family: 'Orbitron', monospace;
-            font-size: 4.5em;
-            font-weight: 700;
-            color: #fff;
-            margin-bottom: 40px;
-            background: rgba(0, 0, 0, 0.2);
-            padding: 30px;
-            border-radius: 20px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            transition: all 0.4s ease;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .time-display::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-            transition: left 0.5s;
-        }
-
-        .time-display.running {
-            border-color: #00ff88;
-            box-shadow: 
-                0 0 30px rgba(0, 255, 136, 0.4),
-                inset 0 0 20px rgba(0, 255, 136, 0.1);
-            animation: digitalPulse 2s infinite;
-        }
-
-        .time-display.running::before {
-            left: 100%;
-            animation: shimmer 2s infinite;
-        }
-
-        @keyframes digitalPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.02); }
-        }
-
-        @keyframes shimmer {
-            0% { left: -100%; }
-            100% { left: 100%; }
-        }
-
-        .time-display.paused {
-            border-color: #ff6b35;
-            box-shadow: 
-                0 0 30px rgba(255, 107, 53, 0.4),
-                inset 0 0 20px rgba(255, 107, 53, 0.1);
-        }
-
-        .controls {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin-bottom: 40px;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            padding: 15px 30px;
-            border: none;
-            border-radius: 50px;
-            font-size: 1.2em;
-            font-weight: 600;
-            font-family: 'Poppins', sans-serif;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-            min-width: 120px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-        }
-
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
-        }
-
-        .btn:hover::before {
-            width: 300px;
-            height: 300px;
-        }
-
-        .btn-start {
-            background: linear-gradient(45deg, #00ff88, #00cc6a);
-            color: white;
-            box-shadow: 0 8px 20px rgba(0, 255, 136, 0.3);
-        }
-
-        .btn-start:hover {
-            transform: translateY(-3px) scale(1.05);
-            box-shadow: 0 12px 25px rgba(0, 255, 136, 0.4);
-        }
-
-        .btn-pause {
-            background: linear-gradient(45deg, #ff6b35, #f7931e);
-            color: white;
-            box-shadow: 0 8px 20px rgba(255, 107, 53, 0.3);
-        }
-
-        .btn-pause:hover {
-            transform: translateY(-3px) scale(1.05);
-            box-shadow: 0 12px 25px rgba(255, 107, 53, 0.4);
-        }
-
-        .btn-reset {
-            background: linear-gradient(45deg, #ff4757, #ff3742);
-            color: white;
-            box-shadow: 0 8px 20px rgba(255, 71, 87, 0.3);
-        }
-
-        .btn-reset:hover {
-            transform: translateY(-3px) scale(1.05);
-            box-shadow: 0 12px 25px rgba(255, 71, 87, 0.4);
-        }
-
-        .btn-lap {
-            background: linear-gradient(45deg, #3742fa, #2f3542);
-            color: white;
-            box-shadow: 0 8px 20px rgba(55, 66, 250, 0.3);
-        }
-
-        .btn-lap:hover {
-            transform: translateY(-3px) scale(1.05);
-            box-shadow: 0 12px 25px rgba(55, 66, 250, 0.4);
-        }
-
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none !important;
-        }
-
-        .btn:disabled::before {
-            display: none;
-        }
-
-        .lap-times {
-            max-height: 350px;
-            overflow-y: auto;
-            margin-top: 20px;
-            border-radius: 20px;
-            background: rgba(0, 0, 0, 0.1);
-            padding: 20px;
-        }
-
-        .lap-times::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .lap-times::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-        }
-
-        .lap-times::-webkit-scrollbar-thumb {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            border-radius: 10px;
-        }
-
-        .lap-header {
-            font-size: 1.8em;
-            color: #fff;
-            margin-bottom: 20px;
-            font-weight: 600;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
-        }
-
-        .lap-list {
-            list-style: none;
-        }
-
-        .lap-item {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-            margin: 10px 0;
-            padding: 20px;
-            border-radius: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: all 0.3s ease;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .lap-item::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 4px;
-            height: 100%;
-            background: linear-gradient(45deg, #00ff88, #3742fa);
-            transition: width 0.3s ease;
-        }
-
-        .lap-item:hover {
-            background: rgba(255, 255, 255, 0.25);
-            transform: translateX(10px) scale(1.02);
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
-        }
-
-        .lap-item:hover::before {
-            width: 100%;
-            opacity: 0.1;
-        }
-
-        .lap-item:nth-child(1) {
-            animation: slideIn 0.5s ease;
-        }
-
-        .lap-item:nth-child(2) {
-            animation: slideIn 0.5s ease 0.1s both;
-        }
-
-        .lap-item:nth-child(3) {
-            animation: slideIn 0.5s ease 0.2s both;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateX(-50px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        .lap-number {
-            font-weight: 700;
-            color: #fff;
-            font-size: 1.2em;
-            text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
-        }
-
-        .lap-time {
-            font-family: 'Orbitron', monospace;
-            font-size: 1.2em;
-            color: #fff;
-            font-weight: 600;
-            text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
-        }
-
-        .clear-laps {
-            background: linear-gradient(45deg, #ff6b35, #f7931e);
-            color: white;
-            padding: 12px 25px;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 1em;
-            font-weight: 600;
-            margin-top: 20px;
-            transition: all 0.3s ease;
-            box-shadow: 0 5px 15px rgba(255, 107, 53, 0.3);
-        }
-
-        .clear-laps:hover {
-            transform: translateY(-2px) scale(1.05);
-            box-shadow: 0 8px 20px rgba(255, 107, 53, 0.4);
-        }
-
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 20px;
-            margin-top: 25px;
-        }
-
-        .stat-item {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-            padding: 20px;
-            border-radius: 15px;
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stat-item::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 2px;
-            background: linear-gradient(45deg, #00ff88, #3742fa);
-        }
-
-        .stat-item:hover {
-            transform: translateY(-5px) scale(1.05);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-        }
-
-        .stat-label {
-            font-size: 1em;
-            color: rgba(255, 255, 255, 0.8);
-            margin-bottom: 10px;
-            font-weight: 500;
-        }
-
-        .stat-value {
-            font-size: 1.4em;
-            font-weight: 700;
-            color: #fff;
-            font-family: 'Orbitron', monospace;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
-        }
-
-        .particle {
-            position: absolute;
-            width: 4px;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.6);
-            border-radius: 50%;
-            pointer-events: none;
-            animation: particleFloat 3s linear infinite;
-        }
-
-        @keyframes particleFloat {
-            0% {
-                transform: translateY(100vh) rotate(0deg);
-                opacity: 0;
-            }
-            10% {
-                opacity: 1;
-            }
-            90% {
-                opacity: 1;
-            }
-            100% {
-                transform: translateY(-100px) rotate(360deg);
-                opacity: 0;
-            }
-        }
-
-        @media (max-width: 600px) {
-            .stopwatch-container {
-                padding: 30px 20px;
-                margin: 10px;
-            }
-
-            .stopwatch-title {
-                font-size: 2.2em;
-            }
-
-            .time-display {
-                font-size: 3em;
-                padding: 20px;
-            }
-
-            .controls {
-                flex-direction: column;
-                align-items: center;
-                gap: 15px;
-            }
-
-            .btn {
-                width: 100%;
-                max-width: 250px;
-            }
-
-            .stats {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Stopwatch | Vicky Raj</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #1e1f2f, #15172b);
+      color: white;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    .bg-particles {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .particle {
+      position: absolute;
+      width: 3px;
+      height: 3px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      animation: float 20s infinite linear;
+    }
+
+    @keyframes float {
+      0% { transform: translateY(100vh); opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { transform: translateY(-100px); opacity: 0; }
+    }
+
+    header {
+      width: 100%;
+      padding: 20px 30px;
+      position: absolute;
+      top: 0;
+      left: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 2;
+    }
+
+    .name {
+      font-size: 1.2rem;
+      font-weight: 500;
+      background: linear-gradient(45deg, #6a5aff, #00c9ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: glow 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes glow {
+      from { text-shadow: 0 0 5px #6a5aff; }
+      to { text-shadow: 0 0 20px #00c9ff; }
+    }
+
+    .title {
+      margin-top: 100px;
+      font-size: 2.8rem;
+      font-weight: 700;
+      text-align: center;
+      background: linear-gradient(90deg, #6a5aff, #00c9ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      z-index: 2;
+    }
+
+    #display {
+      font-size: 3rem;
+      margin: 20px 0;
+      letter-spacing: 2px;
+      z-index: 2;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      z-index: 2;
+      margin-bottom: 20px;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    #startBtn { background-color: #22c55e; }
+    #pauseBtn { background-color: #facc15; color: black; }
+    #resetBtn { background-color: #ef4444; }
+    #lapBtn { background-color: #3b82f6; }
+
+    #laps {
+      max-height: 200px;
+      overflow-y: auto;
+      width: 90%;
+      max-width: 320px;
+      text-align: left;
+      z-index: 2;
+    }
+
+    .lap {
+      background: rgba(255, 255, 255, 0.05);
+      margin: 5px 0;
+      padding: 8px;
+      border-radius: 5px;
+      font-size: 0.95rem;
+      color: #ccc;
+      border-left: 3px solid #3b82f6;
+    }
+  </style>
 </head>
 <body>
-    <div class="background-elements">
-        <div class="floating-circle"></div>
-        <div class="floating-circle"></div>
-        <div class="floating-circle"></div>
-    </div>
 
-    <div class="stopwatch-container">
-        <h1 class="stopwatch-title">STOPWATCH</h1>
-        
-        <div class="time-display" id="timeDisplay">00:00:00</div>
-        
-        <div class="controls">
-            <button class="btn btn-start" id="startBtn">Start</button>
-            <button class="btn btn-pause" id="pauseBtn" disabled>Pause</button>
-            <button class="btn btn-reset" id="resetBtn">Reset</button>
-            <button class="btn btn-lap" id="lapBtn" disabled>Lap</button>
-        </div>
+  <!-- Particles Background -->
+  <div class="bg-particles" id="particles"></div>
 
-        <div class="lap-times" id="lapTimes" style="display: none;">
-            <h3 class="lap-header">Lap Times</h3>
-            <ul class="lap-list" id="lapList"></ul>
-            <button class="clear-laps" id="clearLapsBtn">Clear Laps</button>
-            
-            <div class="stats" id="stats">
-                <div class="stat-item">
-                    <div class="stat-label">Total Laps</div>
-                    <div class="stat-value" id="totalLaps">0</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">Best Lap</div>
-                    <div class="stat-value" id="bestLap">--:--:--</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">Average</div>
-                    <div class="stat-value" id="avgLap">--:--:--</div>
-                </div>
-            </div>
-        </div>
-    </div>
+  <!-- Header with name -->
+  <header>
+    <div class="name">Vicky Raj</div>
+  </header>
 
-    <script>
-        class Stopwatch {
-            constructor() {
-                this.startTime = 0;
-                this.elapsedTime = 0;
-                this.timerInterval = null;
-                this.isRunning = false;
-                this.lapTimes = [];
-                this.lapStartTime = 0;
-                
-                this.initializeElements();
-                this.bindEvents();
-                this.createParticles();
-            }
+  <!-- Title Center -->
+  <div class="title">STOPWATCH</div>
 
-            initializeElements() {
-                this.timeDisplay = document.getElementById('timeDisplay');
-                this.startBtn = document.getElementById('startBtn');
-                this.pauseBtn = document.getElementById('pauseBtn');
-                this.resetBtn = document.getElementById('resetBtn');
-                this.lapBtn = document.getElementById('lapBtn');
-                this.lapTimes = document.getElementById('lapTimes');
-                this.lapList = document.getElementById('lapList');
-                this.clearLapsBtn = document.getElementById('clearLapsBtn');
-                this.container = document.querySelector('.stopwatch-container');
-                
-                // Stats elements
-                this.totalLapsEl = document.getElementById('totalLaps');
-                this.bestLapEl = document.getElementById('bestLap');
-                this.avgLapEl = document.getElementById('avgLap');
-            }
+  <!-- Stopwatch display -->
+  <div id="display">00:00.00</div>
 
-            bindEvents() {
-                this.startBtn.addEventListener('click', () => this.start());
-                this.pauseBtn.addEventListener('click', () => this.pause());
-                this.resetBtn.addEventListener('click', () => this.reset());
-                this.lapBtn.addEventListener('click', () => this.recordLap());
-                this.clearLapsBtn.addEventListener('click', () => this.clearLaps());
-            }
+  <!-- Control buttons -->
+  <div class="buttons">
+    <button id="startBtn">Start</button>
+    <button id="pauseBtn">Pause</button>
+    <button id="resetBtn">Reset</button>
+    <button id="lapBtn">Lap</button>
+  </div>
 
-            createParticles() {
-                setInterval(() => {
-                    if (this.isRunning) {
-                        const particle = document.createElement('div');
-                        particle.className = 'particle';
-                        particle.style.left = Math.random() * 100 + '%';
-                        particle.style.animationDelay = Math.random() * 2 + 's';
-                        document.body.appendChild(particle);
-                        
-                        setTimeout(() => {
-                            particle.remove();
-                        }, 3000);
-                    }
-                }, 500);
-            }
+  <!-- Lap list -->
+  <div id="laps"></div>
 
-            start() {
-                if (!this.isRunning) {
-                    this.startTime = Date.now() - this.elapsedTime;
-                    this.lapStartTime = Date.now() - this.elapsedTime;
-                    this.timerInterval = setInterval(() => this.updateDisplay(), 10);
-                    this.isRunning = true;
-                    
-                    this.startBtn.disabled = true;
-                    this.pauseBtn.disabled = false;
-                    this.lapBtn.disabled = false;
-                    this.resetBtn.disabled = false;
-                    
-                    this.container.classList.add('running');
-                    this.timeDisplay.classList.add('running');
-                    this.timeDisplay.classList.remove('paused');
-                }
-            }
+  <script>
+    let startTime = 0;
+    let elapsedTime = 0;
+    let timerInterval;
+    let running = false;
 
-            pause() {
-                if (this.isRunning) {
-                    clearInterval(this.timerInterval);
-                    this.isRunning = false;
-                    
-                    this.startBtn.disabled = false;
-                    this.pauseBtn.disabled = true;
-                    this.lapBtn.disabled = true;
-                    
-                    this.container.classList.remove('running');
-                    this.timeDisplay.classList.remove('running');
-                    this.timeDisplay.classList.add('paused');
-                }
-            }
+    const display = document.getElementById("display");
+    const startBtn = document.getElementById("startBtn");
+    const pauseBtn = document.getElementById("pauseBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const lapBtn = document.getElementById("lapBtn");
+    const laps = document.getElementById("laps");
 
-            reset() {
-                clearInterval(this.timerInterval);
-                this.isRunning = false;
-                this.elapsedTime = 0;
-                this.startTime = 0;
-                this.lapStartTime = 0;
-                
-                this.updateDisplay();
-                
-                this.startBtn.disabled = false;
-                this.pauseBtn.disabled = true;
-                this.lapBtn.disabled = true;
-                this.resetBtn.disabled = false;
-                
-                this.container.classList.remove('running');
-                this.timeDisplay.classList.remove('running', 'paused');
-                
-                this.clearLaps();
-            }
+    function formatTime(ms) {
+      const date = new Date(ms);
+      const min = String(date.getUTCMinutes()).padStart(2, "0");
+      const sec = String(date.getUTCSeconds()).padStart(2, "0");
+      const msPart = String(Math.floor(date.getUTCMilliseconds() / 10)).padStart(2, "0");
+      return `${min}:${sec}.${msPart}`;
+    }
 
-            updateDisplay() {
-                this.elapsedTime = Date.now() - this.startTime;
-                this.timeDisplay.textContent = this.formatTime(this.elapsedTime);
-            }
+    function updateDisplay() {
+      display.textContent = formatTime(elapsedTime);
+    }
 
-            formatTime(milliseconds) {
-                const totalSeconds = Math.floor(milliseconds / 1000);
-                const minutes = Math.floor(totalSeconds / 60);
-                const seconds = totalSeconds % 60;
-                const ms = Math.floor((milliseconds % 1000) / 10);
-                
-                return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}:${ms.toString().padStart(2, '0')}`;
-            }
+    startBtn.onclick = () => {
+      if (!running) {
+        running = true;
+        startTime = Date.now() - elapsedTime;
+        timerInterval = setInterval(() => {
+          elapsedTime = Date.now() - startTime;
+          updateDisplay();
+        }, 10);
+      }
+    };
 
-            recordLap() {
-                if (this.isRunning) {
-                    const currentTime = Date.now();
-                    const lapTime = currentTime - this.lapStartTime;
-                    const totalTime = this.elapsedTime;
-                    
-                    this.lapTimes.push({
-                        lapTime: lapTime,
-                        totalTime: totalTime,
-                        lapNumber: this.lapTimes.length + 1
-                    });
-                    
-                    this.lapStartTime = currentTime;
-                    this.updateLapDisplay();
-                    this.updateStats();
-                    
-                    if (this.lapTimes.length === 1) {
-                        this.lapTimes.style.display = 'block';
-                    }
-                }
-            }
+    pauseBtn.onclick = () => {
+      if (running) {
+        clearInterval(timerInterval);
+        running = false;
+      }
+    };
 
-            updateLapDisplay() {
-                this.lapList.innerHTML = '';
-                
-                // Show laps in reverse order (most recent first)
-                for (let i = this.lapTimes.length - 1; i >= 0; i--) {
-                    const lap = this.lapTimes[i];
-                    const lapItem = document.createElement('li');
-                    lapItem.className = 'lap-item';
-                    lapItem.innerHTML = `
-                        <span class="lap-number">Lap ${lap.lapNumber}</span>
-                        <span class="lap-time">${this.formatTime(lap.lapTime)}</span>
-                    `;
-                    this.lapList.appendChild(lapItem);
-                }
-            }
+    resetBtn.onclick = () => {
+      clearInterval(timerInterval);
+      elapsedTime = 0;
+      running = false;
+      updateDisplay();
+      laps.innerHTML = "";
+    };
 
-            updateStats() {
-                const totalLaps = this.lapTimes.length;
-                this.totalLapsEl.textContent = totalLaps;
-                
-                if (totalLaps > 0) {
-                    // Find best lap time
-                    const bestLapTime = Math.min(...this.lapTimes.map(lap => lap.lapTime));
-                    this.bestLapEl.textContent = this.formatTime(bestLapTime);
-                    
-                    // Calculate average lap time
-                    const avgLapTime = this.lapTimes.reduce((sum, lap) => sum + lap.lapTime, 0) / totalLaps;
-                    this.avgLapEl.textContent = this.formatTime(avgLapTime);
-                } else {
-                    this.bestLapEl.textContent = '--:--:--';
-                    this.avgLapEl.textContent = '--:--:--';
-                }
-            }
+    lapBtn.onclick = () => {
+      if (running) {
+        const lapTime = formatTime(elapsedTime);
+        const lap = document.createElement("div");
+        lap.className = "lap";
+        lap.textContent = `Lap ${laps.children.length + 1}: ${lapTime}`;
+        laps.prepend(lap);
+      }
+    };
 
-            clearLaps() {
-                this.lapTimes = [];
-                this.lapList.innerHTML = '';
-                this.lapTimes.style.display = 'none';
-                this.updateStats();
-            }
-        }
+    updateDisplay();
 
-        // Initialize the stopwatch when the page loads
-        document.addEventListener('DOMContentLoaded', () => {
-            new Stopwatch();
-        });
-    </script>
+    // Floating particle generation
+    const particleContainer = document.getElementById('particles');
+    for (let i = 0; i < 50; i++) {
+      const p = document.createElement('div');
+      p.classList.add('particle');
+      p.style.left = Math.random() * 100 + '%';
+      p.style.animationDelay = Math.random() * 15 + 's';
+      p.style.animationDuration = (Math.random() * 10 + 15) + 's';
+      particleContainer.appendChild(p);
+    }
+  </script>
 </body>
 </html>
