@@ -184,7 +184,7 @@
       const min = String(date.getUTCMinutes()).padStart(2, "0");
       const sec = String(date.getUTCSeconds()).padStart(2, "0");
       const msPart = String(Math.floor(date.getUTCMilliseconds() / 10)).padStart(2, "0");
-      return `${min}:${sec}.${msPart}`;
+      return ${min}:${sec}.${msPart};
     }
 
     function updateDisplay() {
@@ -222,7 +222,7 @@
         const lapTime = formatTime(elapsedTime);
         const lap = document.createElement("div");
         lap.className = "lap";
-        lap.textContent = `Lap ${laps.children.length + 1}: ${lapTime}`;
+        lap.textContent = Lap ${laps.children.length + 1}: ${lapTime};
         laps.prepend(lap);
       }
     };
